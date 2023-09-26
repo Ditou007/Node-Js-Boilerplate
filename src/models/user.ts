@@ -16,6 +16,12 @@ const userSchema = new mongoose.Schema({
     type: [String],
     default: ['user'],
   },
+  emailVerified: {
+    type: Boolean,
+    default: false,
+  },
+  emailVerificationToken: String,
+  emailVerificationTokenExpires: Date, // Date field to store the expiration time
 })
 
 userSchema.pre('save', async function (next) {
@@ -30,6 +36,7 @@ userSchema.pre('save', async function (next) {
 
   next()
 })
+
 const User = mongoose.model('User', userSchema)
 
 export default User
