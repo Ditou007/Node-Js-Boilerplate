@@ -17,7 +17,7 @@ const authMiddleware: express.RequestHandler = (
   }
 
   try {
-    const decoded = jwt.verify(token, 'golu123')
+    const decoded = jwt.verify(token, process.env.JWT_SECRET as string)
     req.user = decoded
     next()
   } catch (error) {

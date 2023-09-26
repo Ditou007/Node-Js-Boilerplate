@@ -12,9 +12,13 @@ export const registerUser = async (
     console.log('req.body', req.body)
     await user.save()
 
-    const token = jwt.sign({ userId: user._id, roles: user.roles }, 'golu123', {
-      expiresIn: '1h',
-    })
+    const token = jwt.sign(
+      { userId: user._id, roles: user.roles },
+      process.env.JWT_SECRET as string,
+      {
+        expiresIn: '1h',
+      }
+    )
 
     res.status(201).send({ user, token })
   } catch (error) {
@@ -37,9 +41,13 @@ export const loginUser = async (
       return res.status(400).send({ error: 'Invalid login credentials.' })
     }
 
-    const token = jwt.sign({ userId: user._id, roles: user.roles }, 'golu123', {
-      expiresIn: '1h',
-    })
+    const token = jwt.sign(
+      { userId: user._id, roles: user.roles },
+      process.env.JWT_SECRET as string,
+      {
+        expiresIn: '1h',
+      }
+    )
 
     res.send({ user, token })
   } catch (error) {
