@@ -1,18 +1,15 @@
 import nodemailer from 'nodemailer'
-
 const transporter = nodemailer.createTransport({
-  service: 'zoho',
-  host: 'smtp.zoho.com',
-  port: 587,
+  service: 'gmail',
   auth: {
-    user: process.env.ZOHO_EMAIL as string,
-    pass: process.env.ZOHO_PASSWORD as string,
+    user: process.env.GMAIL,
+    pass: process.env.GMAIL_PASSWORD,
   },
 })
 
 export const sendEmail = async (to: string, subject: string, html: string) => {
   const mailOptions = {
-    from: process.env.ZOHO_EMAIL as string,
+    from: process.env.GMAIL,
     to,
     subject,
     html,

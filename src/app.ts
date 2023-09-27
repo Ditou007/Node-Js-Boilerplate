@@ -1,11 +1,9 @@
+import './config/config'
 import express from 'express'
 import path from 'path'
 import { connectDatabase } from './config/database'
 import userRoutes from './routes/userRoutes' // Import the user routes
 import { requestLogger } from './utils/logger'
-import dotenv from 'dotenv'
-
-dotenv.config({ path: path.resolve(__dirname, '../.env') })
 
 const app = express()
 const port = 3000
