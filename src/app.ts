@@ -6,7 +6,7 @@ import userRoutes from './routes/userRoutes' // Import the user routes
 import { requestLogger } from './utils/logger'
 
 const app = express()
-const port = 3000
+const port = 5050
 
 // Initialize and connect to the database
 connectDatabase()

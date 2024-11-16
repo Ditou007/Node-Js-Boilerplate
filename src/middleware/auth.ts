@@ -1,12 +1,11 @@
 import jwt from 'jsonwebtoken'
 import express from 'express'
+import { AuthRequest, UserPayload } from '../types/types'
 
-interface CustomRequest extends express.Request {
-  user?: any
-}
+// Define a TypeScript interface for the payload of your JWTs.
 
 const authMiddleware: express.RequestHandler = (
-  req: CustomRequest,
+  req: AuthRequest,
   res,
   next
 ) => {
@@ -17,7 +16,11 @@ const authMiddleware: express.RequestHandler = (
   }
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET as string)
+    // Use the UserPayload interface to type the decoded JWT payload.
+    const decoded = jwt.verify(
+      token,
+      process.env.JWT_SECRET as string
+    ) as UserPayload
     req.user = decoded
     next()
   } catch (error) {

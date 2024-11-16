@@ -4,27 +4,29 @@ import {
   loginUser,
   requireRole,
   verifyEmail,
+  uploadImage,
 } from '../controllers/userController'
 import authMiddleware from '../middleware/auth'
-import { CustomRequest } from '../../types/types'
+import { AuthRequest } from '../types/types'
 
 const router = express.Router()
 
 router.post('/register', registerUser)
 router.post('/login', loginUser)
-router.get('/protected', authMiddleware, (req: CustomRequest, res) => {
+router.get('/protected', authMiddleware, (req: AuthRequest, res) => {
   res.send("This is a protected route. You're authenticated!")
 })
 router.get(
   '/admin',
   authMiddleware,
   requireRole('admin'),
-  (req: CustomRequest, res) => {
+  (req: AuthRequest, res) => {
     // This route can only be accessed by authenticated users with the 'admin' role
     res.send('Welcome, admin!')
   }
 )
 
 router.get('/verify-email', verifyEmail)
+router.post('/upload-image', authMiddleware, uploadImage)
 
 export default router

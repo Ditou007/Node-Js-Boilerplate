@@ -22,6 +22,18 @@ const userSchema = new mongoose.Schema({
   },
   emailVerificationToken: String,
   emailVerificationTokenExpires: Date, // Date field to store the expiration time
+  images: [
+    {
+      url: {
+        type: String,
+        required: true,
+      },
+      description: {
+        type: String,
+        default: '',
+      },
+    },
+  ],
 })
 
 userSchema.pre('save', async function (next) {

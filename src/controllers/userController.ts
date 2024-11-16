@@ -2,9 +2,18 @@ import User from '../models/user'
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 import express from 'express'
-import { CustomRequest } from '../../types/types'
+import { AuthRequest, UserPayload } from '../types/types'
 import crypto from 'crypto'
 import { sendEmail } from '../config/mailer'
+import upload from '../middleware/upload'
+import AWS from 'aws-sdk'
+
+//!AWS CONFIG
+AWS.config.update({
+  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  region: 'your-region',
+})
 
 function generateVerificationToken(): string {
   return crypto.randomBytes(20).toString('hex')
@@ -81,7 +90,7 @@ export const loginUser = async (
 }
 
 export const requireRole = (role: string): express.RequestHandler => {
-  return (req: CustomRequest, res, next) => {
+  return (req: AuthRequest, res, next) => {
     console.log('req.user', req.user)
     console.log('role', role)
 
@@ -92,10 +101,7 @@ export const requireRole = (role: string): express.RequestHandler => {
     }
   }
 }
-export const verifyEmail = async (
-  req: CustomRequest,
-  res: express.Response
-) => {
+export const verifyEmail = async (req: AuthRequest, res: express.Response) => {
   const token = req.query.token as string
 
   // Find the user with the matching verification token
@@ -116,3 +122,69 @@ export const verifyEmail = async (
 
   res.send({ message: 'Email verified successfully.' })
 }
+
+const s3 = new AWS.S3()
+
+async function uploadToS3(
+  key: string,
+  buffer: Buffer,
+  mimeType: string
+): Promise<string> {
+  const params = {
+    Bucket: 'projectadsbucket',
+    Key: key,
+    Body: buffer,
+    ContentType: mimeType,
+    ACL: 'public-read',
+  }
+  await s3.upload(params).promise()
+  return `https://projectadsbucket.s3.amazonaws.com/${key}`
+}
+
+async function uploadImageToStorage(
+  imageBuffer: Buffer,
+  mimeType: string
+): Promise<string> {
+  const key = `uploads/${Date.now()}.jpg` // Generate a unique key, adjust as needed
+  return uploadToS3(key, imageBuffer, mimeType)
+}
+
+//! Specially done for file type
+
+interface RequestWithFile extends AuthRequest {
+  file?: any
+  user?: UserPayload // Add this line to recognize the user property.
+}
+
+export const uploadImage = [
+  upload.single('image'),
+  async (req: RequestWithFile, res: express.Response) => {
+    try {
+      if (!req.file) {
+        return res.status(400).send('No file uploaded.')
+      }
+
+      // Add a check for req.user and req.user.userId since TypeScript might not be aware that they are defined.
+      if (!req.user || !req.user.userId) {
+        return res.status(401).send('Unauthorized.')
+      }
+
+      const userId = req.user.userId
+      const imageUrl = await uploadImageToStorage(
+        req.file.buffer,
+        req.file.mimetype
+      )
+      const description = req.body.description
+
+      await User.findByIdAndUpdate(
+        userId,
+        { $push: { images: { url: imageUrl, description } } },
+        { new: true }
+      )
+
+      res.status(200).send({ message: 'Image uploaded successfully!' })
+    } catch (error) {
+      res.status(500).send(error)
+    }
+  },
+]
